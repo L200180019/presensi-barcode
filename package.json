@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "serverless-http": "^4.0.0",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "pg": "^8.16.0"
+  }
+}

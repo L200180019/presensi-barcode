@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>ICT FAIR 2026 - Attendance History</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gradient-to-br from-sky-100 via-blue-50 to-cyan-100 min-h-screen overflow-x-hidden">
+
+  <!-- BACKGROUND -->
+  <div class="fixed inset-0 opacity-20 pointer-events-none">
+
+    <div class="absolute top-0 left-0 w-72 h-72 bg-blue-300 rounded-full blur-3xl"></div>
+
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-300 rounded-full blur-3xl"></div>
+
+  </div>
+
+  <div class="relative max-w-7xl mx-auto p-6">
+
+    <!-- HEADER -->
+    <div class="text-center mb-10">
+
+      <div class="inline-block bg-white/80 backdrop-blur-lg px-8 py-5 rounded-3xl shadow-2xl">
+
+        <h1 class="text-5xl md:text-6xl font-black text-blue-900 tracking-wide">
+
+          ICT FAIR 2026
+
+        </h1>
+
+        <p class="text-blue-500 font-semibold mt-2 tracking-widest">
+
+          ATTENDANCE HISTORY SYSTEM
+
+        </p>
+
+      </div>
+
+      <p class="mt-5 text-blue-800 text-lg font-semibold">
+
+        Smart QR Attendance Monitoring Dashboard
+
+      </p>
+
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="flex justify-end gap-4 mb-8">
+
+      <a
+        href="index.html"
+        class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 transition text-white px-6 py-3 rounded-2xl shadow-lg font-semibold"
+      >
+        Dashboard
+      </a>
+
+      <a
+        href="scanner.html"
+        class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:scale-105 transition text-white px-6 py-3 rounded-2xl shadow-lg font-semibold"
+      >
+        Scanner
+      </a>
+
+    </div>
+
+    <!-- FILTER CARD -->
+    <div class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/50 p-6 mb-8">
+
+      <div class="flex flex-col lg:flex-row gap-4 items-center">
+
+        <select
+          id="filterClass"
+          class="border border-blue-100 bg-white p-4 rounded-2xl w-full lg:w-72 focus:outline-none focus:ring-4 focus:ring-blue-200"
+        >
+
+          <option value="">
+            Semua Kelas
+          </option>
+
+          <option>X-4</option>
+          <option>X-5</option>
+          <option>X-10</option>
+          <option>X-11</option>
+
+          <option>XI-3</option>
+          <option>XI-4</option>
+          <option>XI-5</option>
+          <option>XI-10</option>
+          <option>XI-11</option>
+
+        </select>
+
+        <button
+          onclick="filterHistory()"
+          class="bg-gradient-to-r from-green-500 to-emerald-500 hover:scale-105 transition text-white px-6 py-4 rounded-2xl shadow-lg font-semibold w-full lg:w-auto"
+        >
+          Filter Data
+        </button>
+
+        <button
+          onclick="downloadExcel()"
+          class="bg-gradient-to-r from-orange-400 to-orange-500 hover:scale-105 transition text-white px-6 py-4 rounded-2xl shadow-lg font-semibold w-full lg:w-auto"
+        >
+          Download Excel
+        </button>
+
+        <button
+          onclick="clearHistory()"
+          class="bg-gradient-to-r from-red-500 to-pink-500 hover:scale-105 transition text-white px-6 py-4 rounded-2xl shadow-lg font-semibold w-full lg:w-auto"
+        >
+          Clear Semua
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/50">
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full">
+
+          <thead class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+
+            <tr>
+
+              <th class="p-5 text-left">
+                NIS
+              </th>
+
+              <th class="p-5 text-left">
+                Nama
+              </th>
+
+              <th class="p-5 text-left">
+                Kelas
+              </th>
+
+              <th class="p-5 text-left">
+                Waktu Absensi
+              </th>
+
+              <th class="p-5 text-left">
+                Status
+              </th>
+
+              <th class="p-5 text-left">
+                Aksi
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="historyTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="text-center mt-10 text-blue-700 font-semibold">
+
+      ICT FAIR 2026 • Smart Attendance Monitoring
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const API = "https://presensi-barcode.vercel.app/api";
+
+    let allHistory = [];
+
+    async function loadHistory() {
+
+      try {
+
+        const response =
+          await fetch(
+            `${API}/attendance/history`
+          );
+
+        const histories =
+          await response.json();
+
+        allHistory = histories;
+
+        renderTable(histories);
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          "Gagal mengambil history"
+        );
+
+      }
+
+    }
+
+    function renderTable(data) {
+
+      const table =
+        document.getElementById(
+          "historyTable"
+        );
+
+      table.innerHTML = "";
+
+      if (data.length === 0) {
+
+        table.innerHTML = `
+
+          <tr>
+
+            <td
+              colspan="6"
+              class="text-center p-10 text-gray-500 text-lg"
+            >
+
+              Tidak ada data absensi
+
+            </td>
+
+          </tr>
+
+        `;
+
+        return;
+
+      }
+
+      data.forEach((item) => {
+
+        table.innerHTML += `
+
+          <tr class="border-b border-blue-50 hover:bg-sky-50 transition">
+
+            <td class="p-5 font-medium">
+              ${item.nis}
+            </td>
+
+            <td class="p-5 font-bold text-blue-900">
+              ${item.name}
+            </td>
+
+            <td class="p-5">
+              ${item.class}
+            </td>
+
+            <td class="p-5">
+              ${new Date(
+                item.attendance_time
+              ).toLocaleString()}
+            </td>
+
+            <td class="p-5">
+
+              <span class="
+                bg-green-100
+                text-green-700
+                px-4
+                py-2
+                rounded-full
+                text-sm
+                font-semibold
+              ">
+                ${item.status}
+              </span>
+
+            </td>
+
+            <td class="p-5">
+
+              <button
+                onclick="deleteHistory(${item.id})"
+                class="bg-gradient-to-r from-red-500 to-pink-500 hover:scale-105 transition text-white px-4 py-2 rounded-xl shadow-lg"
+              >
+                Hapus
+              </button>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      });
+
+    }
+
+    function filterHistory() {
+
+      const selectedClass =
+        document.getElementById(
+          "filterClass"
+        ).value;
+
+      if (!selectedClass) {
+
+        renderTable(allHistory);
+
+        return;
+
+      }
+
+      const filtered =
+        allHistory.filter(
+          (item) =>
+            item.class ===
+            selectedClass
+        );
+
+      renderTable(filtered);
+
+    }
+
+    function downloadExcel() {
+
+      const selectedClass =
+        document.getElementById(
+          "filterClass"
+        ).value;
+
+      if (!selectedClass) {
+
+        alert(
+          "Pilih kelas dulu"
+        );
+
+        return;
+
+      }
+
+      window.open(
+        `${API}/export/${encodeURIComponent(selectedClass)}`,
+        "_blank"
+      );
+
+    }
+
+    //hapus satu history
+    async function deleteHistory(id) {
+
+      const confirmDelete =
+        confirm(
+          "Yakin ingin menghapus history?"
+        );
+
+      if (!confirmDelete) return;
+
+      const response =
+        await fetch(
+          `${API}/attendance/history/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      alert(data.message);
+
+      loadHistory();
+
+    }
+
+    //hapus semua history
+    async function clearHistory() {
+
+      const confirmClear =
+        confirm(
+          "Yakin ingin menghapus semua history?"
+        );
+
+      if (!confirmClear) return;
+
+      const response =
+        await fetch(
+          `${API}/attendance/history`,
+          {
+            method: "DELETE",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      alert(data.message);
+
+      loadHistory();
+
+    }
+
+    loadHistory();
+
+  </script>
+
+</body>
+
+</html>
